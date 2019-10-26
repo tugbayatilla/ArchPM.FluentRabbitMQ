@@ -5,7 +5,7 @@ namespace ArchPM.FluentRabbitMQ.Configs
     /// <summary>
     /// 
     /// </summary>
-    public class SubscribeConfig
+    public class FetchConfig
     {
         /// <summary>
         /// Gets or sets a value indicating whether [automatic ack].

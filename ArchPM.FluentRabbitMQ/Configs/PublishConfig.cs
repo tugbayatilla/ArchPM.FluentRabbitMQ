@@ -51,7 +51,7 @@ namespace ArchPM.FluentRabbitMQ.Configs
         /// </summary>
         public void Validate()
         {
-            ExchangeName.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(ExchangeName)} is null.");
+            ExchangeName.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(ExchangeName)} is null. You need to define ");
             RoutingKey.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(RoutingKey)} is null.");
         }
     }

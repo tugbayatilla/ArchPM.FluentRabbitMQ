@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Threading.Tasks;
 using ArchPM.FluentRabbitMQ.Configs;
 using ArchPM.FluentRabbitMQ.Configs.Infos;
 using ArchPM.FluentRabbitMQ.Exceptions;
@@ -84,7 +85,7 @@ namespace ArchPM.FluentRabbitMQ
             {
                 DeleteExchange(
                     exchange.Name,
-                    new DeleteExchangeConfig() {IfUnused = false}
+                    new DeleteExchangeConfig() { IfUnused = false }
                 );
             }
             foreach (var queue in Configuration.Queues)
@@ -92,7 +93,7 @@ namespace ArchPM.FluentRabbitMQ
                 DeleteQueue(
                     queue.Name,
                     new DeleteQueueConfig()
-                        {IfUnused = false, IfEmpty = false}
+                    { IfUnused = false, IfEmpty = false }
                 );
             }
             foreach (var binding in Configuration.Bindings)
@@ -298,17 +299,20 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="callback">The callback.</param>
         /// <param name="config">The configuration.</param>
         /// <returns></returns>
-        public FluentRabbit Subscribe(string queueName, Action<byte[]> callback, SubscribeConfig config)
+        public FluentRabbit Subscribe(string queueName, Action<BasicDeliverEventArgs> callback, SubscribeConfig config)
         {
             config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+            RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
 
             var consumer = new EventingBasicConsumer(RabbitMqClient.Model);
             consumer.Received += (ch, ea) =>
             {
-                var body = ea.Body;
-                callback(body);
+                callback(ea);
 
-                RabbitMqClient.Model.BasicAck(ea.DeliveryTag, false);
+                if (!config.AutoAck)
+                {
+                    RabbitMqClient.Model.BasicAck(ea.DeliveryTag, false);
+                }
             };
             RabbitMqClient.Model.BasicConsume(queueName, config.AutoAck, config.ConsumerTag, config.NoLocal, config.Exclusive, config.Arguments, consumer);
 
@@ -322,7 +326,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="callback">The callback.</param>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit Subscribe(string queueName, Action<byte[]> callback, Action<SubscribeConfig> configAction = null)
+        public FluentRabbit Subscribe(string queueName, Action<BasicDeliverEventArgs> callback, Action<SubscribeConfig> configAction = null)
         {
             var config = new SubscribeConfig();
             configAction?.Invoke(config);
@@ -332,6 +336,53 @@ namespace ArchPM.FluentRabbitMQ
 
 
         #endregion
+
+
+        /// <summary>
+        /// Fetches the specified queue name.
+        /// </summary>
+        /// <param name="queueName">Name of the queue.</param>
+        /// <param name="callback">The callback.</param>
+        /// <param name="config">The configuration.</param>
+        /// <returns></returns>
+        public FluentRabbit Fetch(string queueName, Action<BasicGetResult> callback, FetchConfig config)
+        {
+            config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+            RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
+
+            var result = RabbitMqClient.Model.BasicGet(queueName, config.AutoAck);
+            
+            callback?.Invoke(result);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Fetches the specified queue name.
+        /// </summary>
+        /// <param name="queueName">Name of the queue.</param>
+        /// <param name="callback">The callback.</param>
+        /// <param name="configAction">The configuration action.</param>
+        /// <returns></returns>
+        public FluentRabbit Fetch(string queueName, Action<BasicGetResult> callback, Action<FetchConfig> configAction = null)
+        {
+            var config = new FetchConfig();
+            configAction?.Invoke(config);
+
+            return Fetch(queueName, callback, config);
+        }
+
+        /// <summary>
+        /// Sleeps the specified milliseconds.
+        /// </summary>
+        /// <param name="milliseconds">The milliseconds.</param>
+        /// <returns></returns>
+        public FluentRabbit Sleep(int milliseconds = 1000)
+        {
+            System.Threading.Thread.Sleep(milliseconds);
+            return this;
+        }
+
 
         #region Publish
 
@@ -399,10 +450,10 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="payload">The payload.</param>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit Publish<T>(T payload, Action<PublishConfig> configAction = null)
+        public FluentRabbit Publish<T>(T payload, Action<PublishConfig> configAction)
         {
             var config = new PublishConfig();
-            configAction?.Invoke(config);
+            configAction.Invoke(config);
 
             return Publish(payload, config);
         }
@@ -505,5 +556,5 @@ namespace ArchPM.FluentRabbitMQ
     }
 
 
-   
+
 }

@@ -1,5 +1,7 @@
+using System;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using ArchPM.FluentRabbitMQ.Configs;
 using ArchPM.FluentRabbitMQ.Exceptions;
 using ArchPM.FluentRabbitMQ.Tests.Models;
@@ -428,7 +430,7 @@ namespace ArchPM.FluentRabbitMQ.Tests
                         p.ExchangeName = exchangeName;
                     }
                 )
-                .Publish("test",
+                .Publish("test data",
                     p =>
                     {
                         p.ExchangeName = exchangeName;
@@ -436,12 +438,80 @@ namespace ArchPM.FluentRabbitMQ.Tests
                         p.PayloadFormat = PayloadFormat.String;
                     })
                 .Subscribe(queueName,
-                    p => { result = Encoding.UTF8.GetString(p); })
-                .DeleteQueue(queueName)
+                    p => { result = Encoding.UTF8.GetString(p.Body); })
                 .DeleteExchange(exchangeName)
+                .DeleteQueue(queueName)
                 .Dispose();
 
-            result.Should().Be("test");
+            result.Should().Be("test data");
         }
+
+        [Fact]
+        public void Fetch_should_run_without_calling_delete_queue_method()
+        {
+            var result = "";
+            var fluent = new FluentRabbit();
+            fluent.Connect()
+                .CreateExchange("test1")
+                .CreateQueue("test1")
+                .PurgeQueue("test1")
+                .Bind("test1", "test1", "test1")
+                .Publish(
+                    "publish this string",
+                    p =>
+                    {
+                        p.PayloadFormat = PayloadFormat.String;
+                        p.ExchangeName = "test1";
+                        p.RoutingKey = "test1";
+                    }
+                )
+                .Fetch("test1",
+                    (p) =>
+                {
+                    result = Encoding.UTF8.GetString(p.Body);
+                })
+                .DeleteExchange("test1")
+                .DeleteQueue("test1")
+                .Dispose();
+
+            result.Should().Be("publish this string");
+        }
+
+
+        [Fact]
+        public void Subscribe_should_run_without_calling_delete_queue_method()
+        {
+            var exchangeName = "Exchange_Subscribe_should_run_without_calling_delete_queue_method";
+            var queueName = "Queue_Subscribe_should_run_without_calling_delete_queue_method";
+            var routingKey = "RoutingKey_Subscribe_should_run_without_calling_delete_queue_method";
+
+            var result = "";
+            _rabbit
+                .Connect()
+                .CreateQueue(queueName)
+                .CreateExchange(exchangeName)
+                .Bind(
+                    p =>
+                    {
+                        p.RoutingKey = routingKey;
+                        p.QueueName = queueName;
+                        p.ExchangeName = exchangeName;
+                    }
+                )
+                .Publish("test data",
+                    p =>
+                    {
+                        p.ExchangeName = exchangeName;
+                        p.RoutingKey = routingKey;
+                        p.PayloadFormat = PayloadFormat.String;
+                    })
+                .Subscribe(queueName,
+                    p => { result = Encoding.UTF8.GetString(p.Body); })
+                .Sleep()
+                .Dispose();
+
+            result.Should().Be("test data");
+        }
+
     }
 }
