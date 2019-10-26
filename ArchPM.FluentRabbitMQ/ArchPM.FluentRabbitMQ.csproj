@@ -1,19 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8</LangVersion>
     <Authors>Tugbay Atilla</Authors>
-    <Description>ArchPM .NetCore Core RabbitMQ Fluent style api</Description>
+    <Description>ArchPM .Net Standard RabbitMQ Fluent Style API</Description>
     <Copyright>© 2019 Tugbay Atilla</Copyright>
     <PackageReleaseNotes>Initial release</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tugbayatilla/ArchPM.FluentRabbitMQ</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/tugbayatilla/ArchPM.FluentRabbitMQ/master/icon.png</PackageIconUrl>
+    <PackageLicenseUrl>https://github.com/tugbayatilla/ArchPM.FluentRabbitMQ/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/tugbayatilla/ArchPM.FluentRabbitMQ</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>ArchPM, NetCore, RabbitMQ, ServiceBus, API</PackageTags>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
