@@ -4,6 +4,12 @@ using System.Linq;
 
 namespace ArchPM.FluentRabbitMQ.Configs.Infos
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <seealso>
+    ///     <cref>System.Collections.Generic.List{ArchPM.FluentRabbitMQ.Configs.Infos.ExchangeInfo}</cref>
+    /// </seealso>
     public class ExchangeInfos : List<ExchangeInfo>
     {
         /// <summary>

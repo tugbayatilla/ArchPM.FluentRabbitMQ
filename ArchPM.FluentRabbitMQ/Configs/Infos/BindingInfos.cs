@@ -7,7 +7,9 @@ namespace ArchPM.FluentRabbitMQ.Configs.Infos
     /// <summary>
     /// 
     /// </summary>
-    /// <seealso cref="System.Collections.Generic.List{ArchPM.FluentRabbitMQ.Configs.Infos.BindingInfo}" />
+    /// <seealso>
+    ///     <cref>System.Collections.Generic.List{ArchPM.FluentRabbitMQ.Configs.Infos.BindingInfo}</cref>
+    /// </seealso>
     public class BindingInfos : List<BindingInfo>
     {
         /// <summary>

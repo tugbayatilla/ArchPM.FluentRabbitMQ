@@ -7,7 +7,9 @@ namespace ArchPM.FluentRabbitMQ.Configs.Infos
     /// <summary>
     /// 
     /// </summary>
-    /// <seealso cref="System.Collections.Generic.List{ArchPM.FluentRabbitMQ.Configs.Infos.QueueInfo}" />
+    /// <seealso>
+    ///     <cref>System.Collections.Generic.List{ArchPM.FluentRabbitMQ.Configs.Infos.QueueInfo}</cref>
+    /// </seealso>
     public class QueueInfos : List<QueueInfo>
     {
         /// <summary>
