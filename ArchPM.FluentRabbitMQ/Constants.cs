@@ -10,14 +10,6 @@
         /// </summary>
         String,
         /// <summary>
-        /// The json
-        /// </summary>
-        Json,
-        /// <summary>
-        /// The XML
-        /// </summary>
-        Xml,
-        /// <summary>
         /// The byte array
         /// </summary>
         ByteArray

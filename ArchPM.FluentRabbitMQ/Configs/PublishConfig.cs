@@ -39,20 +39,20 @@ namespace ArchPM.FluentRabbitMQ.Configs
         public IBasicProperties BasicProperties { get; set; }
         /// <summary>
         /// Gets or sets the publish method.
-        /// Default is PayloadFormat.Json.
+        /// Default is PayloadFormat.ByteArray.
         /// </summary>
         /// <value>
         /// The publish method.
         /// </value>
-        public PayloadFormat PayloadFormat { get; set; } = PayloadFormat.Json;
+        public PayloadFormat PayloadFormat { get; set; } = PayloadFormat.ByteArray;
 
         /// <summary>
         /// Validates this instance.
         /// </summary>
         public void Validate()
         {
-            ExchangeName.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(ExchangeName)} is null. You need to define ");
-            RoutingKey.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(RoutingKey)} is null.");
+            ExchangeName.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(ExchangeName)} is null. You need to define while publishing.");
+            RoutingKey.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(RoutingKey)} is null. You need to define while publishing.");
         }
     }
 }

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization.Json;
 using System.Text;
-using System.Threading.Tasks;
+using System.Timers;
 using ArchPM.FluentRabbitMQ.Configs;
 using ArchPM.FluentRabbitMQ.Configs.Infos;
 using ArchPM.FluentRabbitMQ.Exceptions;
@@ -22,12 +22,38 @@ namespace ArchPM.FluentRabbitMQ
     public class FluentRabbit : IDisposable
     {
         /// <summary>
+        /// The instance
+        /// </summary>
+        public static readonly FluentRabbit Instance = new FluentRabbit();
+
+        private event EventHandler<TraceData> TraceOccured = delegate { };
+
+        private void FireTraceOccured(MethodBase methodBase, string message)
+        {
+            TraceOccured(this, new TraceData()
+            {
+                Method = methodBase,
+                Message = message,
+            });
+        }
+        private void FireTraceOccured(MethodBase methodBase, Exception ex)
+        {
+            TraceOccured(this, new TraceData()
+            {
+                Method = methodBase,
+                Message = ex.Message,
+                Exception = ex
+            });
+        }
+
+
+        /// <summary>
         /// Gets the configuration.
         /// </summary>
         /// <value>
         /// The configuration.
         /// </value>
-        public FluentRabbitConfiguration Configuration { get; } = new FluentRabbitConfiguration();
+        public FluentRabbitConfiguration Configuration { get; private set; } = new FluentRabbitConfiguration();
 
         /// <summary>
         /// Gets the rabbit mq client.
@@ -38,15 +64,50 @@ namespace ArchPM.FluentRabbitMQ
         public RabbitMqClient RabbitMqClient { get; } = new RabbitMqClient();
 
         /// <summary>
+        /// Traces the specified trace action. this must be called first in the order.
+        /// </summary>
+        /// <param name="traceAction">The trace action.</param>
+        /// <returns></returns>
+        public FluentRabbit Trace(Action<TraceData> traceAction)
+        {
+            TraceOccured += (s, t) => { traceAction?.Invoke(t); };
+
+            return this;
+        }
+
+
+        /// <summary>
         /// Configures the specified configuration action.
         /// </summary>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
         public FluentRabbit Configure(Action<FluentRabbitConfiguration> configAction)
         {
-            configAction?.Invoke(Configuration);
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    configAction?.Invoke(Configuration);
+                });
+        }
 
-            return this;
+        /// <summary>
+        /// Configures the specified configuration.
+        /// </summary>
+        /// <param name="config">The configuration.</param>
+        /// <returns></returns>
+        public FluentRabbit Configure(FluentRabbitConfiguration config)
+        {
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    //validate
+                    config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+
+                    //execute
+                    Configuration = config;
+
+                });
+
         }
 
         /// <summary>
@@ -56,23 +117,26 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit ConfigureUp(Action<FluentRabbitConfiguration> configAction = null)
         {
-            configAction?.Invoke(Configuration);
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    //execute
+                    configAction?.Invoke(Configuration);
 
-            foreach (var exchange in Configuration.Exchanges)
-            {
-                CreateExchange(exchange.Name, exchange.Config);
-            }
-            foreach (var queue in Configuration.Queues)
-            {
-                CreateQueue(queue.Name, queue.Config);
-            }
-            foreach (var binding in Configuration.Bindings)
-            {
-                Bind(binding.Config);
-            }
+                    foreach (var exchange in Configuration.Exchanges)
+                    {
+                        CreateExchange(exchange.Name, exchange.Config);
+                    }
+                    foreach (var queue in Configuration.Queues)
+                    {
+                        CreateQueue(queue.Name, queue.Config);
+                    }
+                    foreach (var binding in Configuration.Bindings)
+                    {
+                        Bind(binding.Config);
+                    }
 
-
-            return this;
+                });
         }
 
         /// <summary>
@@ -81,27 +145,31 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit ConfigureDown()
         {
-            foreach (var exchange in Configuration.Exchanges)
-            {
-                DeleteExchange(
-                    exchange.Name,
-                    new DeleteExchangeConfig() { IfUnused = false }
-                );
-            }
-            foreach (var queue in Configuration.Queues)
-            {
-                DeleteQueue(
-                    queue.Name,
-                    new DeleteQueueConfig()
-                    { IfUnused = false, IfEmpty = false }
-                );
-            }
-            foreach (var binding in Configuration.Bindings)
-            {
-                Unbind(binding.Config);
-            }
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    foreach (var exchange in Configuration.Exchanges)
+                    {
+                        DeleteExchange(
+                            exchange.Name,
+                            new DeleteExchangeConfig() { IfUnused = false }
+                        );
+                    }
+                    foreach (var queue in Configuration.Queues)
+                    {
+                        DeleteQueue(
+                            queue.Name,
+                            new DeleteQueueConfig()
+                            { IfUnused = false, IfEmpty = false }
+                        );
+                    }
+                    foreach (var binding in Configuration.Bindings)
+                    {
+                        Unbind(binding.Config);
+                    }
 
-            return this;
+                });
+
         }
 
 
@@ -111,17 +179,42 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Connect()
         {
-            RabbitMqClient.ConnectionFactory = new ConnectionFactory()
-            {
-                HostName = Configuration.Connection.Host,
-                Password = Configuration.Connection.Password,
-                Port = Configuration.Connection.Port,
-                UserName = Configuration.Connection.Username,
-                VirtualHost = Configuration.Connection.VirtualHost
-            };
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    RabbitMqClient.ConnectionFactory = new ConnectionFactory()
+                    {
+                        HostName = Configuration.Connection.Host,
+                        Password = Configuration.Connection.Password,
+                        Port = Configuration.Connection.Port,
+                        UserName = Configuration.Connection.Username,
+                        VirtualHost = Configuration.Connection.VirtualHost
+                    };
 
-            RabbitMqClient.Connection = RabbitMqClient.ConnectionFactory.CreateConnection();
-            RabbitMqClient.Model = RabbitMqClient.Connection.CreateModel();
+                    RabbitMqClient.Connection = RabbitMqClient.ConnectionFactory.CreateConnection();
+                    RabbitMqClient.Model = RabbitMqClient.Connection.CreateModel();
+                });
+
+        }
+
+        private FluentRabbit TryCatch_Trace(MethodBase methodBase, Action action)
+        {
+            try
+            {
+                //trace
+                FireTraceOccured(methodBase, "calling...");
+
+                //execute
+                action();
+
+                //trace
+                FireTraceOccured(methodBase, "called.");
+            }
+            catch (Exception ex)
+            {
+                FireTraceOccured(methodBase, ex);
+                throw;
+            }
 
             return this;
         }
@@ -136,15 +229,16 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit CreateExchange(string exchangeName, CreateExchangeConfig config)
         {
-            //validation
-            config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
-            RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+            () =>
+                {
+                    //validation
+                    config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+                    RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
 
-            //execution
-            RabbitMqClient.Model.ExchangeDeclare(exchangeName, config.Type, config.Durable, config.AutoDelete, config.Arguments);
-
-            //result
-            return this;
+                    //execution
+                    RabbitMqClient.Model.ExchangeDeclare(exchangeName, config.Type, config.Durable, config.AutoDelete, config.Arguments);
+                });
         }
 
         /// <summary>
@@ -155,12 +249,17 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit CreateExchange(string exchangeName, Action<CreateExchangeConfig> configAction = null)
         {
-            var exchangeInfo = Configuration.Exchanges.FirstOrDefault(p => p.Name == exchangeName) ??
-                new ExchangeInfo();
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    var exchangeInfo = Configuration.Exchanges.FirstOrDefault(p => p.Name == exchangeName) ??
+                        new ExchangeInfo();
 
-            configAction?.Invoke(exchangeInfo.Config);
+                    configAction?.Invoke(exchangeInfo.Config);
 
-            return CreateExchange(exchangeName, exchangeInfo.Config); //todo: like this
+                    CreateExchange(exchangeName, exchangeInfo.Config); //todo: like this
+                });
+
         }
         #endregion
 
@@ -173,15 +272,16 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit CreateQueue(string queueName, CreateQueueConfig config)
         {
-            //validation
-            config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
-            RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    //validation
+                    config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+                    RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
 
-            //execution
-            RabbitMqClient.Model.QueueDeclare(queueName, config.Durable, config.Exclusive, config.AutoDelete, config.Arguments);
-
-            //result
-            return this;
+                    //execution
+                    RabbitMqClient.Model.QueueDeclare(queueName, config.Durable, config.Exclusive, config.AutoDelete, config.Arguments);
+                });
         }
 
         /// <summary>
@@ -192,10 +292,14 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit CreateQueue(string queueName, Action<CreateQueueConfig> configAction = null)
         {
-            var queueInfo = Configuration.Queues.FirstOrDefault(p => p.Name == queueName) ?? new QueueInfo();
-            configAction?.Invoke(queueInfo.Config);
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    var queueInfo = Configuration.Queues.FirstOrDefault(p => p.Name == queueName) ?? new QueueInfo();
+                    configAction?.Invoke(queueInfo.Config);
 
-            return CreateQueue(queueName, queueInfo.Config);
+                    CreateQueue(queueName, queueInfo.Config);
+                });
         }
         #endregion
 
@@ -210,9 +314,15 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Bind(string exchangeName, string queueName, string routingKey, IDictionary<string, object> arguments = null)
         {
-            RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
-            RabbitMqClient.Model.QueueBind(queueName, exchangeName, routingKey, arguments);
-            return this;
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    //validation
+                    RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
+
+                    //execution
+                    RabbitMqClient.Model.QueueBind(queueName, exchangeName, routingKey, arguments);
+                });
         }
 
         /// <summary>
@@ -222,14 +332,18 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Bind(BindingConfig config)
         {
-            //validation
-            config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
-            config.ExchangeName.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(config.ExchangeName)} is null.");
-            config.QueueName.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(config.QueueName)} is null.");
-            config.RoutingKey.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(config.RoutingKey)} is null.");
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    //validation
+                    config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+                    config.ExchangeName.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(config.ExchangeName)} is null.");
+                    config.QueueName.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(config.QueueName)} is null.");
+                    config.RoutingKey.ThrowExceptionIf(string.IsNullOrWhiteSpace, $"{nameof(config.RoutingKey)} is null.");
 
-            //result
-            return Bind(config.ExchangeName, config.QueueName, config.RoutingKey, config.Arguments);
+                    //result
+                    Bind(config.ExchangeName, config.QueueName, config.RoutingKey, config.Arguments);
+                });
         }
 
         /// <summary>
@@ -239,12 +353,15 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Bind(Action<BindingConfig> configAction)
         {
-            var config = new BindingConfig();
-            configAction?.Invoke(config);
-            Configuration.Bindings.Add(new BindingInfo() { Config = config });
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    var config = new BindingConfig();
+                    configAction?.Invoke(config);
+                    Configuration.Bindings.Add(new BindingInfo() { Config = config });
 
-
-            return Bind(config);
+                    Bind(config);
+                });
         }
 
         /// <summary>
@@ -257,9 +374,15 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Unbind(string exchangeName, string queueName, string routingKey, IDictionary<string, object> arguments = null)
         {
-            RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
-            RabbitMqClient.Model.QueueUnbind(queueName, exchangeName, routingKey, arguments);
-            return this;
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    //validation
+                    RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
+
+                    //execution
+                    RabbitMqClient.Model.QueueUnbind(queueName, exchangeName, routingKey, arguments);
+                });
         }
 
         /// <summary>
@@ -269,11 +392,15 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Unbind(BindingConfig config)
         {
-            //validation
-            config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    //validation
+                    config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
 
-            //result
-            return Unbind(config.ExchangeName, config.QueueName, config.RoutingKey, config.Arguments);
+                    //result
+                    Unbind(config.ExchangeName, config.QueueName, config.RoutingKey, config.Arguments);
+                });
         }
 
         /// <summary>
@@ -283,10 +410,15 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Unbind(Action<BindingConfig> configAction)
         {
-            var config = new BindingConfig();
-            configAction?.Invoke(config);
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    var config = new BindingConfig();
+                    configAction?.Invoke(config);
 
-            return Unbind(config);
+                    Unbind(config);
+                }
+            );
         }
 
         #endregion
@@ -301,22 +433,27 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Subscribe(string queueName, Action<BasicDeliverEventArgs> callback, SubscribeConfig config)
         {
-            config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
-            RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
-
-            var consumer = new EventingBasicConsumer(RabbitMqClient.Model);
-            consumer.Received += (ch, ea) =>
-            {
-                callback(ea);
-
-                if (!config.AutoAck)
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
                 {
-                    RabbitMqClient.Model.BasicAck(ea.DeliveryTag, false);
-                }
-            };
-            RabbitMqClient.Model.BasicConsume(queueName, config.AutoAck, config.ConsumerTag, config.NoLocal, config.Exclusive, config.Arguments, consumer);
+                    config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+                    RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
 
-            return this;
+                    var consumer = new EventingBasicConsumer(RabbitMqClient.Model);
+                    consumer.Received += (ch, ea) =>
+                    {
+                        callback(ea);
+
+                        if (!config.AutoAck)
+                        {
+                            RabbitMqClient.Model.BasicAck(ea.DeliveryTag, false);
+                            FireTraceOccured(MethodBase.GetCurrentMethod(), "BasicAck called.");
+                        }
+
+                        FireTraceOccured(MethodBase.GetCurrentMethod(), "Message Received.");
+                    };
+                    RabbitMqClient.Model.BasicConsume(queueName, config.AutoAck, config.ConsumerTag, config.NoLocal, config.Exclusive, config.Arguments, consumer);
+                });
         }
 
         /// <summary>
@@ -328,10 +465,14 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Subscribe(string queueName, Action<BasicDeliverEventArgs> callback, Action<SubscribeConfig> configAction = null)
         {
-            var config = new SubscribeConfig();
-            configAction?.Invoke(config);
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    var config = new SubscribeConfig();
+                    configAction?.Invoke(config);
 
-            return Subscribe(queueName, callback, config);
+                    Subscribe(queueName, callback, config);
+                });
         }
 
 
@@ -347,14 +488,20 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Fetch(string queueName, Action<BasicGetResult> callback, FetchConfig config)
         {
-            config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
-            RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    //validation
+                    config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+                    RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
 
-            var result = RabbitMqClient.Model.BasicGet(queueName, config.AutoAck);
+                    //execution
+                    var result = RabbitMqClient.Model.BasicGet(queueName, config.AutoAck);
+
+                    callback?.Invoke(result);
+                });
+
             
-            callback?.Invoke(result);
-
-            return this;
         }
 
         /// <summary>
@@ -366,10 +513,14 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Fetch(string queueName, Action<BasicGetResult> callback, Action<FetchConfig> configAction = null)
         {
-            var config = new FetchConfig();
-            configAction?.Invoke(config);
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    var config = new FetchConfig();
+                    configAction?.Invoke(config);
 
-            return Fetch(queueName, callback, config);
+                    Fetch(queueName, callback, config);
+                });
         }
 
         /// <summary>
@@ -383,6 +534,38 @@ namespace ArchPM.FluentRabbitMQ
             return this;
         }
 
+        /// <summary>
+        /// Waits the until.
+        /// </summary>
+        /// <param name="condition">The condition.</param>
+        /// <param name="timeout">The timeout. minus values like -1 means forever.</param>
+        /// <param name="frequency">The frequency. waits as milliseconds until next try.</param>
+        /// <returns></returns>
+        /// <exception cref="TimeoutException"></exception>
+        public FluentRabbit WaitUntil(Func<bool> condition, int timeout = 1000, int frequency = 25)
+        {
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    var timer = new Timer(timeout);
+                    if (timeout > 0)
+                    {
+                        timer.Start();
+                    }
+                    timer.Elapsed += (o, e) => throw new TimeoutException();
+
+                    while (!condition())
+                    {
+                        System.Threading.Thread.Sleep(frequency);
+                    }
+
+                    timer.Stop();
+                    timer.Dispose();
+                });
+
+            
+        }
+
 
         #region Publish
 
@@ -394,13 +577,19 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Publish(byte[] data, PublishConfig config)
         {
-            config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
-            config.Validate();
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    //validation
+                    config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+                    config.Validate();
+                    RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
 
-            RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
+                    //execution
+                    RabbitMqClient.Model.BasicPublish(config.ExchangeName, config.RoutingKey, config.Mandatory, config.BasicProperties, data);
+                });
 
-            RabbitMqClient.Model.BasicPublish(config.ExchangeName, config.RoutingKey, config.Mandatory, config.BasicProperties, data);
-            return this;
+            
         }
 
         /// <summary>
@@ -413,34 +602,28 @@ namespace ArchPM.FluentRabbitMQ
         /// <exception cref="NotImplementedException"></exception>
         public FluentRabbit Publish<T>(T payload, PublishConfig config)
         {
-            byte[] body = null;
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    byte[] body = null;
 
-            if (config.PayloadFormat == PayloadFormat.String)
-            {
-                payload.ThrowExceptionIf(p => p.GetType() != typeof(string));
-                body = Encoding.UTF8.GetBytes(payload.ToString());
-            }
-            else if (config.PayloadFormat == PayloadFormat.ByteArray)
-            {
-                var bf = new BinaryFormatter();
-                var ms = new MemoryStream();
-                bf.Serialize(ms, payload);
+                    if (config.PayloadFormat == PayloadFormat.String)
+                    {
+                        payload.ThrowExceptionIf(p => p.GetType() != typeof(string), "Payload type is not a string!");
+                        body = Encoding.UTF8.GetBytes(payload.ToString());
+                    }
+                    else if (config.PayloadFormat == PayloadFormat.ByteArray)
+                    {
+                        var bf = new BinaryFormatter();
+                        var ms = new MemoryStream();
+                        bf.Serialize(ms, payload);
 
-                body = ms.ToArray();
-            }
-            else if (config.PayloadFormat == PayloadFormat.Json)
-            {
-                using var ms = new MemoryStream();
-                var ser = new DataContractJsonSerializer(typeof(T));
-                ser.WriteObject(ms, payload);
-                body = ms.ToArray();
-            }
-            else if (config.PayloadFormat == PayloadFormat.Xml)
-            {
-                throw new NotImplementedException();
-            }
+                        body = ms.ToArray();
+                    }
 
-            return Publish(body, config);
+                    Publish(body, config);
+                });
+            
         }
 
         /// <summary>
@@ -452,10 +635,14 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit Publish<T>(T payload, Action<PublishConfig> configAction)
         {
-            var config = new PublishConfig();
-            configAction.Invoke(config);
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    var config = new PublishConfig();
+                    configAction.Invoke(config);
 
-            return Publish(payload, config);
+                    Publish(payload, config);
+                });
         }
 
         #endregion
@@ -469,10 +656,16 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit DeleteQueue(string queueName, DeleteQueueConfig config)
         {
-            config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
-            RabbitMqClient.Model.QueueDelete(queueName, config.IfUnused, config.IfEmpty);
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    //validation
+                    config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+                    RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
 
-            return this;
+                    //execution
+                    RabbitMqClient.Model.QueueDelete(queueName, config.IfUnused, config.IfEmpty);
+                });
         }
 
         /// <summary>
@@ -483,10 +676,14 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit DeleteQueue(string queueName, Action<DeleteQueueConfig> configAction = null)
         {
-            var config = new DeleteQueueConfig();
-            configAction?.Invoke(config);
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    var config = new DeleteQueueConfig();
+                    configAction?.Invoke(config);
 
-            return DeleteQueue(queueName, config);
+                    DeleteQueue(queueName, config);
+                });
         }
         #endregion
 
@@ -498,9 +695,12 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit PurgeQueue(string queueName, Action<uint> resultAction = null)
         {
-            var purgeResult = RabbitMqClient.Model.QueuePurge(queueName); //todo: need to 
-            resultAction?.Invoke(purgeResult);
-            return this;
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    var purgeResult = RabbitMqClient.Model.QueuePurge(queueName);
+                    resultAction?.Invoke(purgeResult);
+                });
         }
 
 
@@ -514,12 +714,16 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit DeleteExchange(string exchangeName, DeleteExchangeConfig config)
         {
-            config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
-            RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    //validation
+                    config.ThrowExceptionIfNull<ArgumentNullException>(nameof(config));
+                    RabbitMqClient.Model.ThrowExceptionIfNull<ModelIsNullException>();
 
-            RabbitMqClient.Model.ExchangeDelete(exchangeName, config.IfUnused);
-
-            return this;
+                    //execution
+                    RabbitMqClient.Model.ExchangeDelete(exchangeName, config.IfUnused);
+                });
         }
 
         /// <summary>
@@ -530,10 +734,14 @@ namespace ArchPM.FluentRabbitMQ
         /// <returns></returns>
         public FluentRabbit DeleteExchange(string exchangeName, Action<DeleteExchangeConfig> configAction = null)
         {
-            var config = new DeleteExchangeConfig();
-            configAction?.Invoke(config);
+            return TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    var config = new DeleteExchangeConfig();
+                    configAction?.Invoke(config);
 
-            return DeleteExchange(exchangeName, config);
+                    DeleteExchange(exchangeName, config);
+                });
         }
         #endregion
 
@@ -543,15 +751,19 @@ namespace ArchPM.FluentRabbitMQ
         /// </summary>
         public void Dispose()
         {
-            RabbitMqClient.Model?.Close();
-            RabbitMqClient.Connection?.Close();
+            TryCatch_Trace(MethodBase.GetCurrentMethod(), 
+                () =>
+                {
+                    RabbitMqClient.Model?.Close();
+                    RabbitMqClient.Connection?.Close();
 
-            RabbitMqClient.Model?.Dispose();
-            RabbitMqClient.Connection?.Dispose();
+                    RabbitMqClient.Model?.Dispose();
+                    RabbitMqClient.Connection?.Dispose();
 
-            RabbitMqClient.Model = null;
-            RabbitMqClient.Connection = null;
+                    RabbitMqClient.Model = null;
+                    RabbitMqClient.Connection = null;
 
+                });
         }
     }
 

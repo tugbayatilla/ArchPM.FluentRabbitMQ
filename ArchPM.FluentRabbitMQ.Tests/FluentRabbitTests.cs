@@ -1,14 +1,17 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using ArchPM.FluentRabbitMQ.Configs;
 using ArchPM.FluentRabbitMQ.Exceptions;
 using ArchPM.FluentRabbitMQ.Tests.Models;
 using ArchPM.NetCore.Builders;
+using ArchPM.NetCore.Extensions;
 using FluentAssertions;
 using RabbitMQ.Client.Exceptions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ArchPM.FluentRabbitMQ.Tests
 {
@@ -16,10 +19,45 @@ namespace ArchPM.FluentRabbitMQ.Tests
     {
         private readonly FluentRabbit _rabbit;
 
-        public FluentRabbitTests()
+        public FluentRabbitTests(ITestOutputHelper output)
         {
             _rabbit = new FluentRabbit();
+            _rabbit.Trace(
+                p =>
+                {
+                    Debug.WriteLine($"{p.Method.Name} {p.Message}");
+                    output.WriteLine($"{p.Time:yy-MM-dd.hh:mm:ss:fffff}: {p.Method.Name} {p.Message}");
+                    if (p.IsException)
+                    {
+                        Debug.WriteLine($"{p.Exception.GetAllMessages()}");
+                        output.WriteLine($"{p.Exception.GetAllMessages()}");
+                    }
+                });
         }
+
+        private FluentRabbitConfiguration GetFluentRabbitConfiguration(string methodName = null)
+        {
+            methodName = methodName ?? MethodBase.GetCurrentMethod().Name;
+
+            var exchangeName = $"Exchange_{methodName}_{Guid.NewGuid()}";
+            var queueName = $"Queue_{methodName}_{Guid.NewGuid()}";
+            var routingKey = $"RoutingKey_{methodName}_{Guid.NewGuid()}";
+
+            var config = new FluentRabbitConfiguration();
+            config.Exchanges.Add(
+                p => { p.Name = exchangeName; });
+            config.Queues.Add(p => { p.Name = queueName; });
+            config.Bindings.Add(
+                p =>
+                {
+                    p.Config.ExchangeName = exchangeName;
+                    p.Config.QueueName = queueName;
+                    p.Config.RoutingKey = routingKey;
+                });
+
+            return config;
+        }
+
 
         [Fact]
         public void ExecuteConfigure()
@@ -27,12 +65,12 @@ namespace ArchPM.FluentRabbitMQ.Tests
             var queueConfig = new CreateQueueConfig();
             var exchangeConfig = new CreateExchangeConfig();
 
-            var exchange1 = "Exchange1";
-            var exchange2 = "Exchange2";
-            var queue1 = "Queue1";
-            var queue2 = "Queue2";
-            var routingKey1 = "RoutingKey1";
-            var routingKey2 = "RoutingKey2";
+            var exchange1 = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var exchange2 = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var queue1 = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}"; 
+            var queue2 = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}"; 
+            var routingKey1 = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var routingKey2 = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             _rabbit.Configure(
                     p =>
@@ -76,12 +114,14 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void Configure_Should_be_used_with_predicate()
         {
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+
             _rabbit.Configure(
-                p => { p.Exchanges.Add(e => { e.Name = "Exchange1"; }); }
+                p => { p.Exchanges.Add(e => { e.Name = exchangeName; }); }
             );
 
             _rabbit.Configuration
-                .Exchanges.Should().ContainSingle(p => p.Name == "Exchange1");
+                .Exchanges.Should().ContainSingle(p => p.Name == exchangeName);
         }
 
         [Fact]
@@ -97,7 +137,7 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void CreateExchange_should_create_check_exists_delete()
         {
-            var exchangeName = "CreateExchange_should_create_check_exists_delete";
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             _rabbit
                 .Connect()
@@ -120,6 +160,8 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void Should_throw_exception_if_connect_is_not_called()
         {
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+
             Assert.Throws<ModelIsNullException>(
                 () =>
                 {
@@ -127,7 +169,7 @@ namespace ArchPM.FluentRabbitMQ.Tests
 
                     try
                     {
-                        rabbit = rabbit.CreateExchange("Exchange1");
+                        rabbit = rabbit.CreateExchange(exchangeName);
                     }
                     finally
                     {
@@ -140,7 +182,7 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void CreateExchange_should_custom_local_config_set_to_global_config()
         {
-            var exchangeName = "CreateExchange_should_custom_local_config_set_to_global_config";
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             _rabbit.Configure(
                 p =>
@@ -169,7 +211,7 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void CreateQueue_should_create_check_exists_delete()
         {
-            var queueName = "CreateQueue_should_create_check_exists_delete";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             _rabbit.Connect().CreateQueue(queueName);
 
@@ -190,7 +232,7 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void CreateQueue_should_custom_local_config_set_to_global_config()
         {
-            var queueName = "CreateQueue_should_custom_local_config_set_to_global_config";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             _rabbit.Configure(
                 p =>
@@ -220,9 +262,9 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void Bind_should_connect_exchange_and_queue()
         {
-            var exchangeName = "Exchange_Bind_should_connect_exchange_and_queue";
-            var queueName = "Queue_Bind_should_connect_exchange_and_queue";
-            var routingKey = "RoutingKey_Bind_should_connect_exchange_and_queue";
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var routingKey = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             _rabbit
                 .Connect()
@@ -243,9 +285,10 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void Unbind_should_disconnect_exchange_and_queue()
         {
-            var exchangeName = "Exchange_Unbind_should_disconnect_exchange_and_queue";
-            var queueName = "Queue_Unbind_should_disconnect_exchange_and_queue";
-            var routingKey = "RoutingKey_Unbind_should_disconnect_exchange_and_queue";
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var routingKey = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+
 
             _rabbit
                 .Connect()
@@ -274,9 +317,10 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void Bind_should_custom_local_config_set_to_global_config()
         {
-            var exchangeName = "Exchange_Bind_should_custom_local_config_set_to_global_config";
-            var queueName = "Queue_Bind_should_custom_local_config_set_to_global_config";
-            var routingKey = "RoutingKey_Bind_should_custom_local_config_set_to_global_config";
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var routingKey = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var newRoutingKey = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             //configure
             _rabbit.Configure(
@@ -301,14 +345,14 @@ namespace ArchPM.FluentRabbitMQ.Tests
                 .CreateExchange(exchangeName)
                 .Bind(p =>
                 {
-                    p.RoutingKey = "newRoutingKey";
+                    p.RoutingKey = newRoutingKey;
                     p.QueueName = queueName;
                     p.ExchangeName = exchangeName;
                 })
                 .DeleteQueue(queueName)
                 .DeleteExchange(exchangeName);
 
-            _rabbit.Configuration.Bindings.Should().Contain(p => p.Config.RoutingKey == "newRoutingKey");
+            _rabbit.Configuration.Bindings.Should().Contain(p => p.Config.RoutingKey == newRoutingKey);
 
             _rabbit.Dispose();
         }
@@ -316,9 +360,9 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void Publish_should_send_string_message_to_queue()
         {
-            var exchangeName = "Exchange_Publish_should_send_string_message_to_queue";
-            var queueName = "Queue_Publish_should_send_string_message_to_queue";
-            var routingKey = "RoutingKey_Publish_should_send_string_message_to_queue";
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var routingKey = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             _rabbit
                 .Connect()
@@ -332,7 +376,7 @@ namespace ArchPM.FluentRabbitMQ.Tests
                         p.ExchangeName = exchangeName;
                     }
                 )
-                .Publish("this is string",
+                .Publish("sampleData",
                     p =>
                     {
                         p.ExchangeName = exchangeName;
@@ -347,9 +391,9 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void Publish_should_send_object_as_byte_array_message_to_queue()
         {
-            var exchangeName = "Exchange_Publish_should_send_object_as_byte_array_message_to_queue";
-            var queueName = "Queue_Publish_should_send_object_as_byte_array_message_to_queue";
-            var routingKey = "RoutingKey_Publish_should_send_object_as_byte_array_message_to_queue";
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var routingKey = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             var sampleClass = SampleBuilder.Create<SerializableSampleClass>();
 
@@ -380,9 +424,9 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void Publish_should_send_object_as_json_message_to_queue()
         {
-            var exchangeName = "Exchange_Publish_should_send_object_as_json_message_to_queue";
-            var queueName = "Queue_Publish_should_send_object_as_json_message_to_queue";
-            var routingKey = "RoutingKey_Publish_should_send_object_as_json_message_to_queue";
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var routingKey = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             var sampleClass = SampleBuilder.Create<SerializableSampleClass>();
 
@@ -403,7 +447,7 @@ namespace ArchPM.FluentRabbitMQ.Tests
                     {
                         p.ExchangeName = exchangeName;
                         p.RoutingKey = routingKey;
-                        p.PayloadFormat = PayloadFormat.Json;
+                        p.PayloadFormat = PayloadFormat.ByteArray;
                     })
                 .DeleteQueue(queueName)
                 .DeleteExchange(exchangeName)
@@ -413,9 +457,9 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void Subscribe_should_read_published_string()
         {
-            var exchangeName = "Exchange_Publish_should_send_object_as_json_message_to_queue";
-            var queueName = "Queue_Publish_should_send_object_as_json_message_to_queue";
-            var routingKey = "RoutingKey_Publish_should_send_object_as_json_message_to_queue";
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var routingKey = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             var result = "";
             _rabbit
@@ -430,6 +474,8 @@ namespace ArchPM.FluentRabbitMQ.Tests
                         p.ExchangeName = exchangeName;
                     }
                 )
+                .Subscribe(queueName,
+                    p => { result = Encoding.UTF8.GetString(p.Body); })
                 .Publish("test data",
                     p =>
                     {
@@ -437,8 +483,6 @@ namespace ArchPM.FluentRabbitMQ.Tests
                         p.RoutingKey = routingKey;
                         p.PayloadFormat = PayloadFormat.String;
                     })
-                .Subscribe(queueName,
-                    p => { result = Encoding.UTF8.GetString(p.Body); })
                 .DeleteExchange(exchangeName)
                 .DeleteQueue(queueName)
                 .Dispose();
@@ -449,29 +493,32 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void Fetch_should_run_without_calling_delete_queue_method()
         {
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var routingKey = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+
             var result = "";
-            var fluent = new FluentRabbit();
-            fluent.Connect()
-                .CreateExchange("test1")
-                .CreateQueue("test1")
-                .PurgeQueue("test1")
-                .Bind("test1", "test1", "test1")
+            _rabbit.Connect()
+                .CreateExchange(exchangeName)
+                .CreateQueue(queueName)
+                .PurgeQueue(queueName)
+                .Bind(exchangeName, queueName, routingKey)
                 .Publish(
                     "publish this string",
                     p =>
                     {
                         p.PayloadFormat = PayloadFormat.String;
-                        p.ExchangeName = "test1";
-                        p.RoutingKey = "test1";
+                        p.ExchangeName = exchangeName;
+                        p.RoutingKey = routingKey;
                     }
                 )
-                .Fetch("test1",
+                .Fetch(queueName,
                     (p) =>
                 {
                     result = Encoding.UTF8.GetString(p.Body);
                 })
-                .DeleteExchange("test1")
-                .DeleteQueue("test1")
+                .DeleteExchange(exchangeName)
+                .DeleteQueue(queueName)
                 .Dispose();
 
             result.Should().Be("publish this string");
@@ -481,14 +528,15 @@ namespace ArchPM.FluentRabbitMQ.Tests
         [Fact]
         public void Subscribe_should_run_without_calling_delete_queue_method()
         {
-            var exchangeName = "Exchange_Subscribe_should_run_without_calling_delete_queue_method";
-            var queueName = "Queue_Subscribe_should_run_without_calling_delete_queue_method";
-            var routingKey = "RoutingKey_Subscribe_should_run_without_calling_delete_queue_method";
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var routingKey = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
 
             var result = "";
             _rabbit
                 .Connect()
                 .CreateQueue(queueName)
+                .PurgeQueue(queueName)
                 .CreateExchange(exchangeName)
                 .Bind(
                     p =>
@@ -498,6 +546,8 @@ namespace ArchPM.FluentRabbitMQ.Tests
                         p.ExchangeName = exchangeName;
                     }
                 )
+                .Subscribe(queueName,
+                    p => { result = Encoding.UTF8.GetString(p.Body); })
                 .Publish("test data",
                     p =>
                     {
@@ -505,12 +555,39 @@ namespace ArchPM.FluentRabbitMQ.Tests
                         p.RoutingKey = routingKey;
                         p.PayloadFormat = PayloadFormat.String;
                     })
-                .Subscribe(queueName,
-                    p => { result = Encoding.UTF8.GetString(p.Body); })
-                .Sleep()
-                .Dispose();
+                .WaitUntil(() => !string.IsNullOrWhiteSpace(result), 2000)
+                ;
 
             result.Should().Be("test data");
+
+            _rabbit.DeleteQueue(queueName).DeleteExchange(exchangeName).Dispose();
+        }
+
+        [Fact]
+        public void Configure_should_work_with_concrete_config()
+        {
+            var config = GetFluentRabbitConfiguration();
+            var data = Guid.NewGuid().ToString();
+            var result = "";
+
+            _rabbit
+                .Connect()
+                .Configure(config)
+                .ConfigureUp()
+                .Publish(data,
+                    p =>
+                    {
+                        p.PayloadFormat = PayloadFormat.String;
+                        p.ExchangeName = config.Bindings.First().Config.ExchangeName;
+                        p.RoutingKey = config.Bindings.First().Config.RoutingKey;
+                    })
+                .Fetch(config.Bindings.First().Config.QueueName,
+                    p => { result = Encoding.UTF8.GetString(p.Body); })
+                .ConfigureDown()
+                .Dispose()
+                ;
+
+            result.Should().Be(data);
         }
 
     }
