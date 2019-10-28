@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Timers;
 using ArchPM.FluentRabbitMQ.Configs;
 using ArchPM.FluentRabbitMQ.Exceptions;
 using ArchPM.FluentRabbitMQ.Tests.Models;
@@ -606,6 +607,54 @@ namespace ArchPM.FluentRabbitMQ.Tests
             });
 
         }
+
+        [Fact]
+        public void WaitUnit_should_continue_when_condition_turn_to_true()
+        {
+            var condition = false;
+            var timer = new Timer(300);
+            timer.Elapsed += (s, e) => { condition = true; };
+            timer.Start();
+            var sw = new Stopwatch();
+            sw.Start();
+            _rabbit.WaitUntil(() => condition, 2000);
+            timer.Stop();
+            sw.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(2));
+        }
+
+        [Fact]
+        public void Publish_should_continue_with_bytearray_without_converting_to_byte_array()
+        {
+            var exchangeName = $"Exchange_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var queueName = $"Queue_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+            var routingKey = $"RoutingKey_{MethodBase.GetCurrentMethod().Name}_{Guid.NewGuid()}";
+
+            var value = "this is value";
+            var data = Encoding.UTF8.GetBytes(value);
+
+            _rabbit
+                .Connect()
+                .CreateQueue(queueName)
+                .CreateExchange(exchangeName)
+                .Bind(
+                    p =>
+                    {
+                        p.RoutingKey = routingKey;
+                        p.QueueName = queueName;
+                        p.ExchangeName = exchangeName;
+                    }
+                )
+                .Publish(data,
+                    p =>
+                    {
+                        p.ExchangeName = exchangeName;
+                        p.RoutingKey = routingKey;
+                    })
+                .DeleteQueue(queueName)
+                .DeleteExchange(exchangeName)
+                .Dispose();
+        }
+
 
     }
 }

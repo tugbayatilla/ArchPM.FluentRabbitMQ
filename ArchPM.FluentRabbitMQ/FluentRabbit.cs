@@ -547,14 +547,16 @@ namespace ArchPM.FluentRabbitMQ
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
                 {
+                    if (timeout < 0)
+                    {
+                        timeout = int.MaxValue;
+                    }
+
                     var timer = new Timer(timeout);
                     try
                     {
                         var expired = false;
-                        if (timeout > 0)
-                        {
-                            timer.Start();
-                        }
+                        timer.Start();
 
                         timer.Elapsed += (o, e) => expired = true;
 
@@ -626,11 +628,18 @@ namespace ArchPM.FluentRabbitMQ
                     }
                     else if (config.PayloadFormat == PayloadFormat.ByteArray)
                     {
-                        var bf = new BinaryFormatter();
-                        using var ms = new MemoryStream();
-                        bf.Serialize(ms, payload);
+                        if (typeof(T) == typeof(byte[]))
+                        {
+                            body = payload as byte[];
+                        }
+                        else
+                        {
+                            var bf = new BinaryFormatter();
+                            using var ms = new MemoryStream();
+                            bf.Serialize(ms, payload);
 
-                        body = ms.ToArray();
+                            body = ms.ToArray();
+                        }
                     }
 
                     Publish(body, config);
