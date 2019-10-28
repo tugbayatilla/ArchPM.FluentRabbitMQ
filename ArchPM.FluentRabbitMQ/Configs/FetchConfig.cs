@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ArchPM.FluentRabbitMQ.Configs
+﻿namespace ArchPM.FluentRabbitMQ.Configs
 {
     /// <summary>
     /// 
@@ -45,6 +43,6 @@ namespace ArchPM.FluentRabbitMQ.Configs
         /// <value>
         /// The arguments.
         /// </value>
-        public IDictionary<string, object> Arguments { get; set; }
+        public ArgumentsDictionary Arguments { get; } = new ArgumentsDictionary();
     }
 }

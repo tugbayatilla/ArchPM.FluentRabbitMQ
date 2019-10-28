@@ -46,7 +46,13 @@ namespace ArchPM.FluentRabbitMQ.Tests
             var config = new FluentRabbitConfiguration();
             config.Exchanges.Add(
                 p => { p.Name = exchangeName; });
-            config.Queues.Add(p => { p.Name = queueName; });
+            config.Queues.Add(
+                p =>
+                {
+                    p.Name = queueName;
+                    p.Config.Durable = true;
+                    p.Config.Arguments.Add("x-dead-letter-exchange", exchangeName+".Deadletter");
+                });
             config.Bindings.Add(
                 p =>
                 {

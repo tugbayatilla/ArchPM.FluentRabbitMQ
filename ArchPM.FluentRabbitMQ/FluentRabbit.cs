@@ -615,7 +615,7 @@ namespace ArchPM.FluentRabbitMQ
                     else if (config.PayloadFormat == PayloadFormat.ByteArray)
                     {
                         var bf = new BinaryFormatter();
-                        var ms = new MemoryStream();
+                        using var ms = new MemoryStream();
                         bf.Serialize(ms, payload);
 
                         body = ms.ToArray();

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using ArchPM.NetCore.Extensions;
 
@@ -40,7 +39,7 @@ namespace ArchPM.FluentRabbitMQ.Configs
         /// <value>
         /// The arguments.
         /// </value>
-        public IDictionary<string, object> Arguments { get; set; }
+        public ArgumentsDictionary Arguments { get; } = new ArgumentsDictionary();
 
         /// <summary>
         /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.

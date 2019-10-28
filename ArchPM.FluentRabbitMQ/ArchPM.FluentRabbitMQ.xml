@@ -4,6 +4,14 @@
         <name>ArchPM.FluentRabbitMQ</name>
     </assembly>
     <members>
+        <member name="T:ArchPM.FluentRabbitMQ.Configs.ArgumentsDictionary">
+            <summary>
+            
+            </summary>
+            <seealso>
+                <cref>System.Collections.Generic.Dictionary{System.String, System.Object}</cref>
+            </seealso>
+        </member>
         <member name="T:ArchPM.FluentRabbitMQ.Configs.BindingConfig">
             <summary>
             
@@ -95,13 +103,6 @@
             The arguments.
             </value>
         </member>
-        <member name="M:ArchPM.FluentRabbitMQ.Configs.CreateExchangeConfig.AddArgument(System.String,System.Object)">
-            <summary>
-            Adds the argument.
-            </summary>
-            <param name="key">The key.</param>
-            <param name="value">The value.</param>
-        </member>
         <member name="T:ArchPM.FluentRabbitMQ.Configs.CreateQueueConfig">
             <summary>
             
@@ -138,13 +139,6 @@
             <value>
             The arguments.
             </value>
-        </member>
-        <member name="M:ArchPM.FluentRabbitMQ.Configs.CreateQueueConfig.AddArgument(System.String,System.Object)">
-            <summary>
-            Adds the argument.
-            </summary>
-            <param name="key">The key.</param>
-            <param name="value">The value.</param>
         </member>
         <member name="T:ArchPM.FluentRabbitMQ.Configs.DeleteExchangeConfig">
             <summary>
