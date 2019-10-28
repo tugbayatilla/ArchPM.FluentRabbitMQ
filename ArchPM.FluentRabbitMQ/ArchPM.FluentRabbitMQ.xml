@@ -183,6 +183,51 @@
               <c>true</c> if [if unused]; otherwise, <c>false</c>.
             </value>
         </member>
+        <member name="T:ArchPM.FluentRabbitMQ.Configs.FetchConfig">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.Configs.FetchConfig.AutoAck">
+            <summary>
+            Gets or sets a value indicating whether [automatic ack].
+            </summary>
+            <value>
+              <c>true</c> if [automatic ack]; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.Configs.FetchConfig.ConsumerTag">
+            <summary>
+            Gets or sets the consumer tag.
+            </summary>
+            <value>
+            The consumer tag.
+            </value>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.Configs.FetchConfig.NoLocal">
+            <summary>
+            Gets or sets a value indicating whether [no local].
+            </summary>
+            <value>
+              <c>true</c> if [no local]; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.Configs.FetchConfig.Exclusive">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:ArchPM.FluentRabbitMQ.Configs.SubscribeConfig"/> is exclusive.
+            </summary>
+            <value>
+              <c>true</c> if exclusive; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.Configs.FetchConfig.Arguments">
+            <summary>
+            Gets or sets the arguments.
+            </summary>
+            <value>
+            The arguments.
+            </value>
+        </member>
         <member name="T:ArchPM.FluentRabbitMQ.Configs.FluentRabbitConfiguration">
             <summary>
             
@@ -319,6 +364,14 @@
             The configuration.
             </value>
         </member>
+        <member name="T:ArchPM.FluentRabbitMQ.Configs.Infos.ExchangeInfos">
+            <summary>
+            
+            </summary>
+            <seealso>
+                <cref>System.Collections.Generic.List{ArchPM.FluentRabbitMQ.Configs.Infos.ExchangeInfo}</cref>
+            </seealso>
+        </member>
         <member name="M:ArchPM.FluentRabbitMQ.Configs.Infos.ExchangeInfos.Add(ArchPM.FluentRabbitMQ.Configs.Infos.ExchangeInfo)">
             <summary>
             Adds the specified information. if same item exists, overrides on existing one.
@@ -427,7 +480,7 @@
         <member name="P:ArchPM.FluentRabbitMQ.Configs.PublishConfig.PayloadFormat">
             <summary>
             Gets or sets the publish method.
-            Default is PayloadFormat.Json.
+            Default is PayloadFormat.ByteArray.
             </summary>
             <value>
             The publish method.
@@ -483,6 +536,51 @@
             The arguments.
             </value>
         </member>
+        <member name="T:ArchPM.FluentRabbitMQ.Configs.TraceData">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.Configs.TraceData.Time">
+            <summary>
+            Gets or sets the time.
+            </summary>
+            <value>
+            The time.
+            </value>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.Configs.TraceData.Method">
+            <summary>
+            Gets or sets the method.
+            </summary>
+            <value>
+            The method.
+            </value>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.Configs.TraceData.Message">
+            <summary>
+            Gets or sets the message.
+            </summary>
+            <value>
+            The message.
+            </value>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.Configs.TraceData.IsException">
+            <summary>
+            Gets a value indicating whether this instance is exception.
+            </summary>
+            <value>
+              <c>true</c> if this instance is exception; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.Configs.TraceData.Exception">
+            <summary>
+            Gets or sets the exception.
+            </summary>
+            <value>
+            The exception.
+            </value>
+        </member>
         <member name="T:ArchPM.FluentRabbitMQ.PayloadFormat">
             <summary>
             
@@ -491,16 +589,6 @@
         <member name="F:ArchPM.FluentRabbitMQ.PayloadFormat.String">
             <summary>
             The string
-            </summary>
-        </member>
-        <member name="F:ArchPM.FluentRabbitMQ.PayloadFormat.Json">
-            <summary>
-            The json
-            </summary>
-        </member>
-        <member name="F:ArchPM.FluentRabbitMQ.PayloadFormat.Xml">
-            <summary>
-            The XML
             </summary>
         </member>
         <member name="F:ArchPM.FluentRabbitMQ.PayloadFormat.ByteArray">
@@ -587,6 +675,11 @@
             </summary>
             <seealso cref="T:System.IDisposable" />
         </member>
+        <member name="F:ArchPM.FluentRabbitMQ.FluentRabbit.Instance">
+            <summary>
+            The instance
+            </summary>
+        </member>
         <member name="P:ArchPM.FluentRabbitMQ.FluentRabbit.Configuration">
             <summary>
             Gets the configuration.
@@ -603,11 +696,25 @@
             The rabbit mq client.
             </value>
         </member>
+        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.Trace(System.Action{ArchPM.FluentRabbitMQ.Configs.TraceData})">
+            <summary>
+            Traces the specified trace action. this must be called first in the order.
+            </summary>
+            <param name="traceAction">The trace action.</param>
+            <returns></returns>
+        </member>
         <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.Configure(System.Action{ArchPM.FluentRabbitMQ.Configs.FluentRabbitConfiguration})">
             <summary>
             Configures the specified configuration action.
             </summary>
             <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.Configure(ArchPM.FluentRabbitMQ.Configs.FluentRabbitConfiguration)">
+            <summary>
+            Configures the specified configuration.
+            </summary>
+            <param name="config">The configuration.</param>
             <returns></returns>
         </member>
         <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.ConfigureUp(System.Action{ArchPM.FluentRabbitMQ.Configs.FluentRabbitConfiguration})">
@@ -709,7 +816,7 @@
             <param name="configAction">The configuration action.</param>
             <returns></returns>
         </member>
-        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.Subscribe(System.String,System.Action{System.Byte[]},ArchPM.FluentRabbitMQ.Configs.SubscribeConfig)">
+        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.Subscribe(System.String,System.Action{RabbitMQ.Client.Events.BasicDeliverEventArgs},ArchPM.FluentRabbitMQ.Configs.SubscribeConfig)">
             <summary>
             Subscribes the specified queue name.
             </summary>
@@ -718,7 +825,7 @@
             <param name="config">The configuration.</param>
             <returns></returns>
         </member>
-        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.Subscribe(System.String,System.Action{System.Byte[]},System.Action{ArchPM.FluentRabbitMQ.Configs.SubscribeConfig})">
+        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.Subscribe(System.String,System.Action{RabbitMQ.Client.Events.BasicDeliverEventArgs},System.Action{ArchPM.FluentRabbitMQ.Configs.SubscribeConfig})">
             <summary>
             Subscribes the specified queue name.
             </summary>
@@ -726,6 +833,41 @@
             <param name="callback">The callback.</param>
             <param name="configAction">The configuration action.</param>
             <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.Fetch(System.String,System.Action{RabbitMQ.Client.BasicGetResult},ArchPM.FluentRabbitMQ.Configs.FetchConfig)">
+            <summary>
+            Fetches the specified queue name.
+            </summary>
+            <param name="queueName">Name of the queue.</param>
+            <param name="callback">The callback.</param>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.Fetch(System.String,System.Action{RabbitMQ.Client.BasicGetResult},System.Action{ArchPM.FluentRabbitMQ.Configs.FetchConfig})">
+            <summary>
+            Fetches the specified queue name.
+            </summary>
+            <param name="queueName">Name of the queue.</param>
+            <param name="callback">The callback.</param>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.Sleep(System.Int32)">
+            <summary>
+            Sleeps the specified milliseconds.
+            </summary>
+            <param name="milliseconds">The milliseconds.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.WaitUntil(System.Func{System.Boolean},System.Int32,System.Int32)">
+            <summary>
+            Waits the until.
+            </summary>
+            <param name="condition">The condition.</param>
+            <param name="timeout">The timeout. minus values like -1 means forever.</param>
+            <param name="frequency">The frequency. waits as milliseconds until next try.</param>
+            <returns></returns>
+            <exception cref="T:System.TimeoutException"></exception>
         </member>
         <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.Publish(System.Byte[],ArchPM.FluentRabbitMQ.Configs.PublishConfig)">
             <summary>

@@ -6,7 +6,7 @@
     <Authors>Tugbay Atilla</Authors>
     <Description>ArchPM .Net Standard RabbitMQ Fluent Style API</Description>
     <Copyright>© 2019 Tugbay Atilla</Copyright>
-    <PackageReleaseNotes>Trace method implemented, Constants changed</PackageReleaseNotes>
+    <PackageReleaseNotes>xml documentation added</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tugbayatilla/ArchPM.FluentRabbitMQ</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/tugbayatilla/ArchPM.FluentRabbitMQ/master/icon.png</PackageIconUrl>
     <PackageLicenseUrl>https://github.com/tugbayatilla/ArchPM.FluentRabbitMQ/blob/master/LICENSE</PackageLicenseUrl>
@@ -17,13 +17,17 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.0.3.0</AssemblyVersion>
-    <FileVersion>1.0.3.0</FileVersion>
-    <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <FileVersion>1.0.4.0</FileVersion>
+    <Version>1.0.4</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>C:\Users\Tugbay\source\repos\ArchPM.FluentRabbitMQ\ArchPM.FluentRabbitMQ\ArchPM.FluentRabbitMQ.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>C:\Users\Tugbay\source\personal\ArchPM.FluentRabbitMQ\ArchPM.FluentRabbitMQ\ArchPM.FluentRabbitMQ.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
