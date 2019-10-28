@@ -596,5 +596,16 @@ namespace ArchPM.FluentRabbitMQ.Tests
             result.Should().Be(data);
         }
 
+        [Fact]
+        public void WaitUnit_should_throw_timeout_exception_when_expired()
+        {
+            Assert.Throws<TimeoutException>(() =>
+            {
+                _rabbit
+                    .WaitUntil(() => false, 100);
+            });
+
+        }
+
     }
 }

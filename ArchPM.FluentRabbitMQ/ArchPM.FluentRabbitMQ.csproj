@@ -6,7 +6,7 @@
     <Authors>Tugbay Atilla</Authors>
     <Description>ArchPM .Net Standard RabbitMQ Fluent Style API</Description>
     <Copyright>© 2019 Tugbay Atilla</Copyright>
-    <PackageReleaseNotes>ArgumentsDictionary implemented. minor bug fixed</PackageReleaseNotes>
+    <PackageReleaseNotes>minor bug fixes</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tugbayatilla/ArchPM.FluentRabbitMQ</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/tugbayatilla/ArchPM.FluentRabbitMQ/master/icon.png</PackageIconUrl>
     <PackageLicenseUrl>https://github.com/tugbayatilla/ArchPM.FluentRabbitMQ/blob/master/LICENSE</PackageLicenseUrl>
@@ -17,9 +17,9 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.0.5.0</AssemblyVersion>
-    <FileVersion>1.0.5.0</FileVersion>
-    <Version>1.0.5</Version>
+    <AssemblyVersion>1.0.6.0</AssemblyVersion>
+    <FileVersion>1.0.6.0</FileVersion>
+    <Version>1.0.6</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
