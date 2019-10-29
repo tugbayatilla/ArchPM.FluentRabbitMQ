@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Threading.Tasks;
 using System.Timers;
 using ArchPM.FluentRabbitMQ.Configs;
 using ArchPM.FluentRabbitMQ.Configs.Infos;
@@ -163,11 +164,6 @@ namespace ArchPM.FluentRabbitMQ
                             { IfUnused = false, IfEmpty = false }
                         );
                     }
-                    foreach (var binding in Configuration.Bindings)
-                    {
-                        Unbind(binding.Config);
-                    }
-
                 });
 
         }
@@ -442,7 +438,7 @@ namespace ArchPM.FluentRabbitMQ
                     var consumer = new EventingBasicConsumer(RabbitMqClient.Model);
                     consumer.Received += (ch, ea) =>
                     {
-                        callback(ea);
+                        callback?.Invoke(ea);
 
                         if (!config.AutoAck)
                         {
@@ -452,7 +448,8 @@ namespace ArchPM.FluentRabbitMQ
 
                         FireTraceOccured(MethodBase.GetCurrentMethod(), "Message Received.");
                     };
-                    RabbitMqClient.Model.BasicConsume(queueName, config.AutoAck, config.ConsumerTag, config.NoLocal, config.Exclusive, config.Arguments, consumer);
+
+                    config.ConsumerTag = RabbitMqClient.Model.BasicConsume(queueName, config.AutoAck, config.ConsumerTag, config.NoLocal, config.Exclusive, config.Arguments, consumer);
                 });
         }
 
@@ -526,11 +523,12 @@ namespace ArchPM.FluentRabbitMQ
         /// <summary>
         /// Sleeps the specified milliseconds.
         /// </summary>
-        /// <param name="milliseconds">The milliseconds.</param>
+        /// <param name="frequency">The frequency.</param>
         /// <returns></returns>
-        public FluentRabbit Sleep(int milliseconds = 1000)
+        public FluentRabbit Sleep(int frequency = 1000)
         {
-            System.Threading.Thread.Sleep(milliseconds);
+            Task.Delay(frequency).GetAwaiter().GetResult();
+
             return this;
         }
 
@@ -544,39 +542,36 @@ namespace ArchPM.FluentRabbitMQ
         /// <exception cref="TimeoutException"></exception>
         public FluentRabbit WaitUntil(Func<bool> condition, int timeout = 1000, int frequency = 25)
         {
-            return TryCatch_Trace(MethodBase.GetCurrentMethod(),
-                () =>
+            if (timeout < 0)
+            {
+                timeout = int.MaxValue;
+            }
+
+            var timer = new Timer(timeout);
+            try
+            {
+                var expired = false;
+                timer.Start();
+
+                timer.Elapsed += (o, e) => expired = true;
+
+                while (!condition())
                 {
-                    if (timeout < 0)
+                    if (expired)
                     {
-                        timeout = int.MaxValue;
+                        throw new TimeoutException($"{timeout}ms elapsed!");
                     }
 
-                    var timer = new Timer(timeout);
-                    try
-                    {
-                        var expired = false;
-                        timer.Start();
+                    Task.Delay(frequency).GetAwaiter().GetResult();
+                }
+            }
+            finally
+            {
+                timer.Stop();
+                timer.Dispose();
+            }
 
-                        timer.Elapsed += (o, e) => expired = true;
-
-                        while (!condition())
-                        {
-                            if (expired)
-                            {
-                                throw new TimeoutException($"{timeout}ms elapsed!");
-                            }
-
-                            System.Threading.Thread.Sleep(frequency);
-                        }
-                    }
-                    finally
-                    {
-                        timer.Stop();
-                        timer.Dispose();
-                    }
-                });
-
+            return this;
 
         }
 

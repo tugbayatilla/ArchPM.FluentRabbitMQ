@@ -1,5 +1,6 @@
 ﻿using ArchPM.NetCore.Extensions;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Framing;
 
 namespace ArchPM.FluentRabbitMQ.Configs
 {
@@ -36,7 +37,7 @@ namespace ArchPM.FluentRabbitMQ.Configs
         /// <value>
         /// The basic properties.
         /// </value>
-        public IBasicProperties BasicProperties { get; set; }
+        public IBasicProperties BasicProperties { get; set; } = new BasicProperties();
         /// <summary>
         /// Gets or sets the publish method.
         /// Default is PayloadFormat.ByteArray.
