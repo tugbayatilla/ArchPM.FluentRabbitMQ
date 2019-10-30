@@ -20,7 +20,7 @@ namespace ArchPM.FluentRabbitMQ
     /// 
     /// </summary>
     /// <seealso cref="System.IDisposable" />
-    public class FluentRabbit : IDisposable
+    public class FluentRabbit : IDisposable, IFluentRabbit
     {
         /// <summary>
         /// The instance
@@ -564,7 +564,7 @@ namespace ArchPM.FluentRabbitMQ
             var config = new WaitUntilConfig();
             configAction?.Invoke(config);
 
-            config.Timeout.ThrowExceptionIf(p=>p<0, new ArgumentOutOfRangeException($"{nameof(config.Timeout)} must be greater than zero!"));
+            config.Timeout.ThrowExceptionIf(p => p < 0, new ArgumentOutOfRangeException($"{nameof(config.Timeout)} must be greater than zero!"));
 
 
             var timer = new Timer(config.Timeout);
@@ -583,7 +583,7 @@ namespace ArchPM.FluentRabbitMQ
                         {
                             break;
                         }
-                     
+
                         throw new TimeoutException($"{config.Timeout}ms elapsed!");
                     }
 

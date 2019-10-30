@@ -973,6 +973,278 @@
             Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
             </summary>
         </member>
+        <member name="T:ArchPM.FluentRabbitMQ.IFluentRabbit">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.IFluentRabbit.Configuration">
+            <summary>
+            Gets the configuration.
+            </summary>
+            <value>
+            The configuration.
+            </value>
+        </member>
+        <member name="P:ArchPM.FluentRabbitMQ.IFluentRabbit.RabbitMqClient">
+            <summary>
+            Gets the rabbit mq client.
+            </summary>
+            <value>
+            The rabbit mq client.
+            </value>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Bind(System.Action{ArchPM.FluentRabbitMQ.Configs.BindingConfig})">
+            <summary>
+            Binds the specified configuration action.
+            </summary>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Bind(ArchPM.FluentRabbitMQ.Configs.BindingConfig)">
+            <summary>
+            Binds the specified configuration.
+            </summary>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Bind(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Binds the specified exchange name.
+            </summary>
+            <param name="exchangeName">Name of the exchange.</param>
+            <param name="queueName">Name of the queue.</param>
+            <param name="routingKey">The routing key.</param>
+            <param name="arguments">The arguments.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Configure(System.Action{ArchPM.FluentRabbitMQ.Configs.FluentRabbitConfiguration})">
+            <summary>
+            Configures the specified configuration action.
+            </summary>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Configure(ArchPM.FluentRabbitMQ.Configs.FluentRabbitConfiguration)">
+            <summary>
+            Configures the specified configuration.
+            </summary>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.ConfigureDown">
+            <summary>
+            Configures down.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.ConfigureUp(System.Action{ArchPM.FluentRabbitMQ.Configs.FluentRabbitConfiguration})">
+            <summary>
+            Configures up.
+            </summary>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Connect">
+            <summary>
+            Connects this instance.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.CreateExchange(System.String,System.Action{ArchPM.FluentRabbitMQ.Configs.CreateExchangeConfig})">
+            <summary>
+            Creates the exchange.
+            </summary>
+            <param name="exchangeName">Name of the exchange.</param>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.CreateExchange(System.String,ArchPM.FluentRabbitMQ.Configs.CreateExchangeConfig)">
+            <summary>
+            Creates the exchange.
+            </summary>
+            <param name="exchangeName">Name of the exchange.</param>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.CreateQueue(System.String,System.Action{ArchPM.FluentRabbitMQ.Configs.CreateQueueConfig})">
+            <summary>
+            Creates the queue.
+            </summary>
+            <param name="queueName">Name of the queue.</param>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.CreateQueue(System.String,ArchPM.FluentRabbitMQ.Configs.CreateQueueConfig)">
+            <summary>
+            Creates the queue.
+            </summary>
+            <param name="queueName">Name of the queue.</param>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.DeleteExchange(System.String,System.Action{ArchPM.FluentRabbitMQ.Configs.DeleteExchangeConfig})">
+            <summary>
+            Deletes the exchange.
+            </summary>
+            <param name="exchangeName">Name of the exchange.</param>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.DeleteExchange(System.String,ArchPM.FluentRabbitMQ.Configs.DeleteExchangeConfig)">
+            <summary>
+            Deletes the exchange.
+            </summary>
+            <param name="exchangeName">Name of the exchange.</param>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.DeleteQueue(System.String,System.Action{ArchPM.FluentRabbitMQ.Configs.DeleteQueueConfig})">
+            <summary>
+            Deletes the queue.
+            </summary>
+            <param name="queueName">Name of the queue.</param>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.DeleteQueue(System.String,ArchPM.FluentRabbitMQ.Configs.DeleteQueueConfig)">
+            <summary>
+            Deletes the queue.
+            </summary>
+            <param name="queueName">Name of the queue.</param>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Dispose">
+            <summary>
+            Releases unmanaged and - optionally - managed resources.
+            </summary>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Fetch(System.String,System.Action{RabbitMQ.Client.BasicGetResult},System.Action{ArchPM.FluentRabbitMQ.Configs.FetchConfig})">
+            <summary>
+            Fetches the specified queue name.
+            </summary>
+            <param name="queueName">Name of the queue.</param>
+            <param name="callback">The callback.</param>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Fetch(System.String,System.Action{RabbitMQ.Client.BasicGetResult},ArchPM.FluentRabbitMQ.Configs.FetchConfig)">
+            <summary>
+            Fetches the specified queue name.
+            </summary>
+            <param name="queueName">Name of the queue.</param>
+            <param name="callback">The callback.</param>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Publish(System.Byte[],ArchPM.FluentRabbitMQ.Configs.PublishConfig)">
+            <summary>
+            Publishes the specified data.
+            </summary>
+            <param name="data">The data.</param>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Publish``1(``0,System.Action{ArchPM.FluentRabbitMQ.Configs.PublishConfig})">
+            <summary>
+            Publishes the specified payload.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="payload">The payload.</param>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Publish``1(``0,ArchPM.FluentRabbitMQ.Configs.PublishConfig)">
+            <summary>
+            Publishes the specified payload.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="payload">The payload.</param>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.PurgeQueue(System.String,System.Action{System.UInt32})">
+            <summary>
+            Purges the queue.
+            </summary>
+            <param name="queueName">Name of the queue.</param>
+            <param name="resultAction">The result action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Sleep(System.Int32)">
+            <summary>
+            Sleeps the specified frequency.
+            </summary>
+            <param name="frequency">The frequency.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Subscribe(System.String,System.Action{RabbitMQ.Client.Events.BasicDeliverEventArgs},System.Action{ArchPM.FluentRabbitMQ.Configs.SubscribeConfig})">
+            <summary>
+            Subscribes the specified queue name.
+            </summary>
+            <param name="queueName">Name of the queue.</param>
+            <param name="callback">The callback.</param>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Subscribe(System.String,System.Action{RabbitMQ.Client.Events.BasicDeliverEventArgs},ArchPM.FluentRabbitMQ.Configs.SubscribeConfig)">
+            <summary>
+            Subscribes the specified queue name.
+            </summary>
+            <param name="queueName">Name of the queue.</param>
+            <param name="callback">The callback.</param>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Trace(System.Action{ArchPM.FluentRabbitMQ.Configs.TraceData})">
+            <summary>
+            Traces the specified trace action.
+            </summary>
+            <param name="traceAction">The trace action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Unbind(System.Action{ArchPM.FluentRabbitMQ.Configs.BindingConfig})">
+            <summary>
+            Unbinds the specified configuration action.
+            </summary>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Unbind(ArchPM.FluentRabbitMQ.Configs.BindingConfig)">
+            <summary>
+            Unbinds the specified configuration.
+            </summary>
+            <param name="config">The configuration.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.Unbind(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Unbinds the specified exchange name.
+            </summary>
+            <param name="exchangeName">Name of the exchange.</param>
+            <param name="queueName">Name of the queue.</param>
+            <param name="routingKey">The routing key.</param>
+            <param name="arguments">The arguments.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.WaitUntil(System.Func{System.Boolean},System.Int32,System.Int32)">
+            <summary>
+            Waits the until.
+            </summary>
+            <param name="condition">The condition.</param>
+            <param name="timeout">The timeout.</param>
+            <param name="frequency">The frequency.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.IFluentRabbit.WaitUntil(System.Func{System.Boolean},System.Action{ArchPM.FluentRabbitMQ.Configs.WaitUntilConfig})">
+            <summary>
+            Waits the until.
+            </summary>
+            <param name="condition">The condition.</param>
+            <param name="configAction">The configuration action.</param>
+            <returns></returns>
+        </member>
         <member name="T:ArchPM.FluentRabbitMQ.RabbitMqClient">
             <summary>
             
