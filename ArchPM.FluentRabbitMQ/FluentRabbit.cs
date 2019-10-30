@@ -27,9 +27,17 @@ namespace ArchPM.FluentRabbitMQ
         /// </summary>
         public static readonly FluentRabbit Instance = new FluentRabbit();
 
-        private event EventHandler<TraceData> TraceOccured = delegate { };
+        /// <summary>
+        /// Occurs when [trace occured].
+        /// </summary>
+        protected event EventHandler<TraceData> TraceOccured = delegate { };
 
-        private void FireTraceOccured(MethodBase methodBase, string message)
+        /// <summary>
+        /// Fires the trace occured.
+        /// </summary>
+        /// <param name="methodBase">The method base.</param>
+        /// <param name="message">The message.</param>
+        protected virtual void FireTraceOccured(MethodBase methodBase, string message)
         {
             TraceOccured(this, new TraceData()
             {
@@ -37,7 +45,12 @@ namespace ArchPM.FluentRabbitMQ
                 Message = message,
             });
         }
-        private void FireTraceOccured(MethodBase methodBase, Exception ex)
+        /// <summary>
+        /// Fires the trace occured.
+        /// </summary>
+        /// <param name="methodBase">The method base.</param>
+        /// <param name="ex">The ex.</param>
+        protected virtual void FireTraceOccured(MethodBase methodBase, Exception ex)
         {
             TraceOccured(this, new TraceData()
             {
@@ -45,6 +58,34 @@ namespace ArchPM.FluentRabbitMQ
                 Message = ex.Message,
                 Exception = ex
             });
+        }
+
+        /// <summary>
+        /// Tries the catch trace.
+        /// </summary>
+        /// <param name="methodBase">The method base.</param>
+        /// <param name="action">The action.</param>
+        /// <returns></returns>
+        protected virtual FluentRabbit TryCatch_Trace(MethodBase methodBase, Action action)
+        {
+            try
+            {
+                //trace
+                FireTraceOccured(methodBase, "calling...");
+
+                //execute
+                action();
+
+                //trace
+                FireTraceOccured(methodBase, "called.");
+            }
+            catch (Exception ex)
+            {
+                FireTraceOccured(methodBase, ex);
+                throw;
+            }
+
+            return this;
         }
 
 
@@ -69,7 +110,7 @@ namespace ArchPM.FluentRabbitMQ
         /// </summary>
         /// <param name="traceAction">The trace action.</param>
         /// <returns></returns>
-        public FluentRabbit Trace(Action<TraceData> traceAction)
+        public virtual FluentRabbit Trace(Action<TraceData> traceAction)
         {
             TraceOccured += (s, t) => { traceAction?.Invoke(t); };
 
@@ -82,7 +123,7 @@ namespace ArchPM.FluentRabbitMQ
         /// </summary>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit Configure(Action<FluentRabbitConfiguration> configAction)
+        public virtual FluentRabbit Configure(Action<FluentRabbitConfiguration> configAction)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -96,7 +137,7 @@ namespace ArchPM.FluentRabbitMQ
         /// </summary>
         /// <param name="config">The configuration.</param>
         /// <returns></returns>
-        public FluentRabbit Configure(FluentRabbitConfiguration config)
+        public virtual FluentRabbit Configure(FluentRabbitConfiguration config)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -116,7 +157,7 @@ namespace ArchPM.FluentRabbitMQ
         /// </summary>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit ConfigureUp(Action<FluentRabbitConfiguration> configAction = null)
+        public virtual FluentRabbit ConfigureUp(Action<FluentRabbitConfiguration> configAction = null)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -144,7 +185,7 @@ namespace ArchPM.FluentRabbitMQ
         /// Configures down.
         /// </summary>
         /// <returns></returns>
-        public FluentRabbit ConfigureDown()
+        public virtual FluentRabbit ConfigureDown()
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -173,7 +214,7 @@ namespace ArchPM.FluentRabbitMQ
         /// Connects this instance.
         /// </summary>
         /// <returns></returns>
-        public FluentRabbit Connect()
+        public virtual FluentRabbit Connect()
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -193,28 +234,7 @@ namespace ArchPM.FluentRabbitMQ
 
         }
 
-        private FluentRabbit TryCatch_Trace(MethodBase methodBase, Action action)
-        {
-            try
-            {
-                //trace
-                FireTraceOccured(methodBase, "calling...");
-
-                //execute
-                action();
-
-                //trace
-                FireTraceOccured(methodBase, "called.");
-            }
-            catch (Exception ex)
-            {
-                FireTraceOccured(methodBase, ex);
-                throw;
-            }
-
-            return this;
-        }
-
+        
 
         #region Create Exchange
         /// <summary>
@@ -243,7 +263,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="exchangeName">Name of the exchange.</param>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit CreateExchange(string exchangeName, Action<CreateExchangeConfig> configAction = null)
+        public virtual FluentRabbit CreateExchange(string exchangeName, Action<CreateExchangeConfig> configAction = null)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -266,7 +286,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="queueName">Name of the queue.</param>
         /// <param name="config">The configuration.</param>
         /// <returns></returns>
-        public FluentRabbit CreateQueue(string queueName, CreateQueueConfig config)
+        public virtual FluentRabbit CreateQueue(string queueName, CreateQueueConfig config)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -286,7 +306,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="queueName">Name of the queue.</param>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit CreateQueue(string queueName, Action<CreateQueueConfig> configAction = null)
+        public virtual FluentRabbit CreateQueue(string queueName, Action<CreateQueueConfig> configAction = null)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -308,7 +328,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="routingKey">The routing key.</param>
         /// <param name="arguments">The arguments.</param>
         /// <returns></returns>
-        public FluentRabbit Bind(string exchangeName, string queueName, string routingKey, IDictionary<string, object> arguments = null)
+        public virtual FluentRabbit Bind(string exchangeName, string queueName, string routingKey, IDictionary<string, object> arguments = null)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -326,7 +346,7 @@ namespace ArchPM.FluentRabbitMQ
         /// </summary>
         /// <param name="config">The configuration.</param>
         /// <returns></returns>
-        public FluentRabbit Bind(BindingConfig config)
+        public virtual FluentRabbit Bind(BindingConfig config)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -347,7 +367,7 @@ namespace ArchPM.FluentRabbitMQ
         /// </summary>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit Bind(Action<BindingConfig> configAction)
+        public virtual FluentRabbit Bind(Action<BindingConfig> configAction)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -368,7 +388,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="routingKey">The routing key.</param>
         /// <param name="arguments">The arguments.</param>
         /// <returns></returns>
-        public FluentRabbit Unbind(string exchangeName, string queueName, string routingKey, IDictionary<string, object> arguments = null)
+        public virtual FluentRabbit Unbind(string exchangeName, string queueName, string routingKey, IDictionary<string, object> arguments = null)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -386,7 +406,7 @@ namespace ArchPM.FluentRabbitMQ
         /// </summary>
         /// <param name="config">The configuration.</param>
         /// <returns></returns>
-        public FluentRabbit Unbind(BindingConfig config)
+        public virtual FluentRabbit Unbind(BindingConfig config)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -404,7 +424,7 @@ namespace ArchPM.FluentRabbitMQ
         /// </summary>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit Unbind(Action<BindingConfig> configAction)
+        public virtual FluentRabbit Unbind(Action<BindingConfig> configAction)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -427,7 +447,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="callback">The callback.</param>
         /// <param name="config">The configuration.</param>
         /// <returns></returns>
-        public FluentRabbit Subscribe(string queueName, Action<BasicDeliverEventArgs> callback, SubscribeConfig config)
+        public virtual FluentRabbit Subscribe(string queueName, Action<BasicDeliverEventArgs> callback, SubscribeConfig config)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -460,7 +480,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="callback">The callback.</param>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit Subscribe(string queueName, Action<BasicDeliverEventArgs> callback, Action<SubscribeConfig> configAction = null)
+        public virtual FluentRabbit Subscribe(string queueName, Action<BasicDeliverEventArgs> callback, Action<SubscribeConfig> configAction = null)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -483,7 +503,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="callback">The callback.</param>
         /// <param name="config">The configuration.</param>
         /// <returns></returns>
-        public FluentRabbit Fetch(string queueName, Action<BasicGetResult> callback, FetchConfig config)
+        public virtual FluentRabbit Fetch(string queueName, Action<BasicGetResult> callback, FetchConfig config)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -508,7 +528,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="callback">The callback.</param>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit Fetch(string queueName, Action<BasicGetResult> callback, Action<FetchConfig> configAction = null)
+        public virtual FluentRabbit Fetch(string queueName, Action<BasicGetResult> callback, Action<FetchConfig> configAction = null)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -525,7 +545,7 @@ namespace ArchPM.FluentRabbitMQ
         /// </summary>
         /// <param name="frequency">The frequency.</param>
         /// <returns></returns>
-        public FluentRabbit Sleep(int frequency = 1000)
+        public virtual FluentRabbit Sleep(int frequency = 1000)
         {
             Task.Delay(frequency).GetAwaiter().GetResult();
 
@@ -540,7 +560,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="frequency">The frequency. waits as milliseconds until next try.</param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
-        public FluentRabbit WaitUntil(Func<bool> condition, int timeout = 1000, int frequency = 25)
+        public virtual FluentRabbit WaitUntil(Func<bool> condition, int timeout = 1000, int frequency = 25)
         {
             return WaitUntil(condition,
                 p =>
@@ -557,7 +577,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
-        public FluentRabbit WaitUntil(Func<bool> condition, Action<WaitUntilConfig> configAction)
+        public virtual FluentRabbit WaitUntil(Func<bool> condition, Action<WaitUntilConfig> configAction)
         {
             condition.ThrowExceptionIfNull<ArgumentNullException>(nameof(condition));
 
@@ -610,7 +630,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="data">The data.</param>
         /// <param name="config">The configuration.</param>
         /// <returns></returns>
-        public FluentRabbit Publish(byte[] data, PublishConfig config)
+        public virtual FluentRabbit Publish(byte[] data, PublishConfig config)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -635,7 +655,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="config">The configuration.</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public FluentRabbit Publish<T>(T payload, PublishConfig config)
+        public virtual FluentRabbit Publish<T>(T payload, PublishConfig config)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -675,7 +695,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="payload">The payload.</param>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit Publish<T>(T payload, Action<PublishConfig> configAction)
+        public virtual FluentRabbit Publish<T>(T payload, Action<PublishConfig> configAction)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -696,7 +716,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="queueName">Name of the queue.</param>
         /// <param name="config">The configuration.</param>
         /// <returns></returns>
-        public FluentRabbit DeleteQueue(string queueName, DeleteQueueConfig config)
+        public virtual FluentRabbit DeleteQueue(string queueName, DeleteQueueConfig config)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -716,7 +736,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="queueName">Name of the queue.</param>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit DeleteQueue(string queueName, Action<DeleteQueueConfig> configAction = null)
+        public virtual FluentRabbit DeleteQueue(string queueName, Action<DeleteQueueConfig> configAction = null)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -735,7 +755,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="queueName">Name of the queue.</param>
         /// <param name="resultAction">The result action.</param>
         /// <returns></returns>
-        public FluentRabbit PurgeQueue(string queueName, Action<uint> resultAction = null)
+        public virtual FluentRabbit PurgeQueue(string queueName, Action<uint> resultAction = null)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -754,7 +774,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="exchangeName">Name of the exchange.</param>
         /// <param name="config">The configuration.</param>
         /// <returns></returns>
-        public FluentRabbit DeleteExchange(string exchangeName, DeleteExchangeConfig config)
+        public virtual FluentRabbit DeleteExchange(string exchangeName, DeleteExchangeConfig config)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -774,7 +794,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <param name="exchangeName">Name of the exchange.</param>
         /// <param name="configAction">The configuration action.</param>
         /// <returns></returns>
-        public FluentRabbit DeleteExchange(string exchangeName, Action<DeleteExchangeConfig> configAction = null)
+        public virtual FluentRabbit DeleteExchange(string exchangeName, Action<DeleteExchangeConfig> configAction = null)
         {
             return TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>
@@ -791,7 +811,7 @@ namespace ArchPM.FluentRabbitMQ
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             TryCatch_Trace(MethodBase.GetCurrentMethod(),
                 () =>

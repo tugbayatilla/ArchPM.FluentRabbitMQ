@@ -703,6 +703,33 @@
             The instance
             </summary>
         </member>
+        <member name="E:ArchPM.FluentRabbitMQ.FluentRabbit.TraceOccured">
+            <summary>
+            Occurs when [trace occured].
+            </summary>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.FireTraceOccured(System.Reflection.MethodBase,System.String)">
+            <summary>
+            Fires the trace occured.
+            </summary>
+            <param name="methodBase">The method base.</param>
+            <param name="message">The message.</param>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.FireTraceOccured(System.Reflection.MethodBase,System.Exception)">
+            <summary>
+            Fires the trace occured.
+            </summary>
+            <param name="methodBase">The method base.</param>
+            <param name="ex">The ex.</param>
+        </member>
+        <member name="M:ArchPM.FluentRabbitMQ.FluentRabbit.TryCatch_Trace(System.Reflection.MethodBase,System.Action)">
+            <summary>
+            Tries the catch trace.
+            </summary>
+            <param name="methodBase">The method base.</param>
+            <param name="action">The action.</param>
+            <returns></returns>
+        </member>
         <member name="P:ArchPM.FluentRabbitMQ.FluentRabbit.Configuration">
             <summary>
             Gets the configuration.
