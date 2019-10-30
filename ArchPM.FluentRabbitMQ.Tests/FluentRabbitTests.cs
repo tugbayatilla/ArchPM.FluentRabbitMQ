@@ -609,6 +609,40 @@ namespace ArchPM.FluentRabbitMQ.Tests
         }
 
         [Fact]
+        public void WaitUnit_should_not_throw_timeout_exception_when_expired_and_config_set_false()
+        {
+                _rabbit
+                    .WaitUntil(() => false,
+                        p => { p.ThrowTimeExceptionWhenTimeoutReached = false; });
+
+        }
+
+        [Fact]
+        public void WaitUnit_should_throw_exception_when_timeout_is_lower_than_zero()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                _rabbit
+                    .WaitUntil(
+                        () => false,
+                        p => { p.Timeout = -1; }
+                    );
+            });
+        }
+
+        [Fact]
+        public void WaitUnit_should_throw_exception_when_condition_is_null()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _rabbit
+                    .WaitUntil(
+                        null
+                    );
+            });
+        }
+
+        [Fact]
         public void WaitUnit_should_continue_when_condition_turn_to_true()
         {
             var condition = false;

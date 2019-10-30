@@ -542,12 +542,32 @@ namespace ArchPM.FluentRabbitMQ
         /// <exception cref="TimeoutException"></exception>
         public FluentRabbit WaitUntil(Func<bool> condition, int timeout = 1000, int frequency = 25)
         {
-            if (timeout < 0)
-            {
-                timeout = int.MaxValue;
-            }
+            return WaitUntil(condition,
+                p =>
+                {
+                    p.Timeout = timeout;
+                    p.Frequency = frequency;
+                });
+        }
 
-            var timer = new Timer(timeout);
+        /// <summary>
+        /// Waits the until.
+        /// </summary>
+        /// <param name="condition">The condition.</param>
+        /// <param name="configAction">The configuration action.</param>
+        /// <returns></returns>
+        /// <exception cref="TimeoutException"></exception>
+        public FluentRabbit WaitUntil(Func<bool> condition, Action<WaitUntilConfig> configAction)
+        {
+            condition.ThrowExceptionIfNull<ArgumentNullException>(nameof(condition));
+
+            var config = new WaitUntilConfig();
+            configAction?.Invoke(config);
+
+            config.Timeout.ThrowExceptionIf(p=>p<0, new ArgumentOutOfRangeException($"{nameof(config.Timeout)} must be greater than zero!"));
+
+
+            var timer = new Timer(config.Timeout);
             try
             {
                 var expired = false;
@@ -559,10 +579,15 @@ namespace ArchPM.FluentRabbitMQ
                 {
                     if (expired)
                     {
-                        throw new TimeoutException($"{timeout}ms elapsed!");
+                        if (!config.ThrowTimeExceptionWhenTimeoutReached)
+                        {
+                            break;
+                        }
+                     
+                        throw new TimeoutException($"{config.Timeout}ms elapsed!");
                     }
 
-                    Task.Delay(frequency).GetAwaiter().GetResult();
+                    Sleep(config.Frequency);
                 }
             }
             finally
@@ -572,8 +597,9 @@ namespace ArchPM.FluentRabbitMQ
             }
 
             return this;
-
         }
+
+
 
 
         #region Publish
