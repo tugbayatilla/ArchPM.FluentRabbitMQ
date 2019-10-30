@@ -172,11 +172,11 @@ namespace ArchPM.FluentRabbitMQ.Tests
             Assert.Throws<ModelIsNullException>(
                 () =>
                 {
-                    var rabbit = new FluentRabbit();
+                    var rabbit = FluentRabbit.Instance;
 
                     try
                     {
-                        rabbit = rabbit.CreateExchange(exchangeName);
+                        rabbit.CreateExchange(exchangeName);
                     }
                     finally
                     {
@@ -689,6 +689,15 @@ namespace ArchPM.FluentRabbitMQ.Tests
                 .Dispose();
         }
 
+        [Fact]
+        public void ConfigureDown_should_run_with_calling_ConfigureUp()
+        {
+            _rabbit
+                .Configure()
+                .Connect()
+                .ConfigureDown()
+                .Dispose();
+        }
 
     }
 }

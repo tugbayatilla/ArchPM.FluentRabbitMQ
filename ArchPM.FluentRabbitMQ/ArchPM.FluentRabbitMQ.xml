@@ -696,6 +696,7 @@
             <summary>
             
             </summary>
+            <seealso cref="T:ArchPM.FluentRabbitMQ.IFluentRabbit" />
             <seealso cref="T:System.IDisposable" />
         </member>
         <member name="F:ArchPM.FluentRabbitMQ.FluentRabbit.Instance">
