@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
-using System.Timers;
 using ArchPM.FluentRabbitMQ.Configs;
 using ArchPM.FluentRabbitMQ.Configs.Infos;
 using ArchPM.FluentRabbitMQ.Exceptions;
@@ -588,7 +587,7 @@ namespace ArchPM.FluentRabbitMQ
             {
                 p.Timeout = old.Timeout;
                 p.Frequency = old.Frequency;
-                p.ThrowTimeExceptionWhenTimeoutReached = old.ThrowTimeExceptionWhenTimeoutReached;
+                p.ThrowTimeoutException = old.ThrowTimeoutException;
             }
 
             NetCore.Utilities.TimeUtilities.WaitUntilAsync(condition, NewConfigAction).GetAwaiter().GetResult();

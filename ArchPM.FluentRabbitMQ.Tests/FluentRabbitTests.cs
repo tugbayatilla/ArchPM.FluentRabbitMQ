@@ -613,7 +613,7 @@ namespace ArchPM.FluentRabbitMQ.Tests
         {
                 _rabbit
                     .WaitUntil(() => false,
-                        p => { p.ThrowTimeExceptionWhenTimeoutReached = false; });
+                        p => { p.ThrowTimeoutException = false; });
 
         }
 
