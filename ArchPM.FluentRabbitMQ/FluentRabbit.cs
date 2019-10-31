@@ -581,42 +581,17 @@ namespace ArchPM.FluentRabbitMQ
         /// <exception cref="TimeoutException"></exception>
         public virtual IFluentRabbit WaitUntil(Func<bool> condition, Action<WaitUntilConfig> configAction)
         {
-            condition.ThrowExceptionIfNull<ArgumentNullException>(nameof(condition));
+            var old = new WaitUntilConfig();
+            configAction?.Invoke(old);
 
-            var config = new WaitUntilConfig();
-            configAction?.Invoke(config);
-
-            config.Timeout.ThrowExceptionIf(p => p < 0, new ArgumentOutOfRangeException($"{nameof(config.Timeout)} must be greater than zero!"));
-
-
-            var timer = new Timer(config.Timeout);
-            try
+            void NewConfigAction(NetCore.Utilities.WaitUntilConfig p)
             {
-                var expired = false;
-                timer.Start();
-
-                timer.Elapsed += (o, e) => expired = true;
-
-                while (!condition())
-                {
-                    if (expired)
-                    {
-                        if (!config.ThrowTimeExceptionWhenTimeoutReached)
-                        {
-                            break;
-                        }
-
-                        throw new TimeoutException($"{config.Timeout}ms elapsed!");
-                    }
-
-                    Sleep(config.Frequency);
-                }
+                p.Timeout = old.Timeout;
+                p.Frequency = old.Frequency;
+                p.ThrowTimeExceptionWhenTimeoutReached = old.ThrowTimeExceptionWhenTimeoutReached;
             }
-            finally
-            {
-                timer.Stop();
-                timer.Dispose();
-            }
+
+            NetCore.Utilities.TimeUtilities.WaitUntilAsync(condition, NewConfigAction).GetAwaiter().GetResult();
 
             return this;
         }
