@@ -8,7 +8,7 @@
     <Copyright>© 2019 Tugbay Atilla</Copyright>
     <PackageReleaseNotes>minor improvements</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tugbayatilla/ArchPM.FluentRabbitMQ</PackageProjectUrl>
-    <PackageIconUrl>https://github.com/tugbayatilla/ArchPM.FluentRabbitMQ/blob/master/icon.png</PackageIconUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/tugbayatilla/ArchPM.FluentRabbitMQ/master/icon.png</PackageIconUrl>
     <PackageLicenseUrl>https://github.com/tugbayatilla/ArchPM.FluentRabbitMQ/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/tugbayatilla/ArchPM.FluentRabbitMQ</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
